@@ -24,7 +24,11 @@ class CTkInputDialog(CTkToplevel):
                  entry_text_color: Optional[Union[str, Tuple[str, str]]] = None,
 
                  title: str = "CTkDialog",
-                 text: str = "CTkDialog"):
+                 text: str = "CTkDialog",
+                 form_width: int = 300,
+                 form_height: int = 150,
+                 form_pos_x: int = 50,
+                 form_pos_y: int = 50):
 
         super().__init__(fg_color=fg_color)
 
@@ -45,6 +49,22 @@ class CTkInputDialog(CTkToplevel):
         self.lift()  # lift window on top
         self.attributes("-topmost", True)  # stay on top
         self.protocol("WM_DELETE_WINDOW", self._on_closing)
+
+        self._form_width = 300 if form_width <= 0 else form_width  # check unreal sizes
+        self._form_height = 150 if form_height <= 0 else form_height # check unreal sizes
+        self._form_pos_x = 50 if form_pos_x > 100 or form_pos_x < 0 else form_pos_x # check unreal pos
+        self._form_pos_y = 50 if form_pos_y > 100 or form_pos_y < 0 else form_pos_y # check unreal pos
+
+        x_val = int((self.winfo_screenwidth() * self._form_pos_x/100) - (self._form_width / 2))
+        y_val = int((self.winfo_screenheight() * self._form_pos_y / 100) - (self._form_height / 2))
+        # calculate possible location for X
+        self._x_coordinate = 0 if x_val < 0 else x_val
+        self._x_coordinate = self.winfo_screenwidth() - self._form_width if self._x_coordinate > self.winfo_screenwidth() - self._x_coordinate else self._x_coordinate
+        # calculate possible location for Y
+        self._y_coordinate = 0 if y_val < 0 else y_val
+        self._y_coordinate = self.winfo_screenheight() - self._form_height - 35 if self._y_coordinate > self.winfo_screenheight() - self._form_height else self._y_coordinate
+        self.geometry("{}x{}+{}+{}".format(self._form_width, self._form_height, self._x_coordinate, self._y_coordinate)) # set location for windows
+
         self.after(10, self._create_widgets)  # create widgets with slight delay, to avoid white flickering of background
         self.resizable(False, False)
         self.grab_set()  # make other windows not clickable
@@ -55,15 +75,15 @@ class CTkInputDialog(CTkToplevel):
         self.rowconfigure(0, weight=1)
 
         self._label = CTkLabel(master=self,
-                               width=300,
-                               wraplength=300,
+                               width=self._form_width,
+                               wraplength=self._form_width,
                                fg_color="transparent",
                                text_color=self._text_color,
                                text=self._text,)
         self._label.grid(row=0, column=0, columnspan=2, padx=20, pady=20, sticky="ew")
 
         self._entry = CTkEntry(master=self,
-                               width=230,
+                               width=self._form_width * 0.9,
                                fg_color=self._entry_fg_color,
                                border_color=self._entry_border_color,
                                text_color=self._entry_text_color)
